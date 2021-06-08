@@ -4,6 +4,9 @@
 ## Introduction
 This project aims to practice sql commend in Qt Interface with the human resource bank's data.
 
+quick look
+![](https://i.imgur.com/bXcVWNV.png)
+
 ## Installment
 First, install PyQt
 ```
