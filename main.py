@@ -7,10 +7,10 @@ import pandas as pd
 
 con = sqlite3.connect('human_resource.db')
 cur = con.cursor()
-
+print("hello")
 # Create table
 cur.execute('''CREATE TABLE IF NOT EXISTS job
-               (Jid text PRIMARY KEY, Job_Name text, Salary text, Cid text)''')
+               (Jid text PRIMARY KEY, Job_Name text, Salary int, Cid text)''')
 
 # Create table
 cur.execute('''CREATE TABLE IF NOT EXISTS  company
@@ -41,20 +41,141 @@ class ExampleApp(QtWidgets.QMainWindow, Ui.Ui_MainWindow):
         self.Input_btn.clicked.connect(self.click_input_btn)
         self.Delete_btn.clicked.connect(self.click_delete_btn)
 
+        self.function = ['sql', 'job_browse', 'user_browse', 'update_profile', 'company_fileter', 'company_profile', 'search_job', 'not_search_job', 'possible_company']
+        self.mode = 0
+        self.comboBox.addItems(self.function)
+        self.comboBox.currentIndexChanged.connect(self.f_mode)
+    
+    def f_mode(self):
+        self.mode = self.comboBox.currentIndex()
+
 
     def click_search_btn(self):
-        print("click search btn")
+        print(f"click search btn {self.function[self.mode]}")
         print(self.input_text.toPlainText())
         print(self.output_text.toPlainText())
         try:
-            tmp = cur.execute(self.input_text.toPlainText())
-            tmp_s = ""
-            for i in tmp:
-                for j in i:
-                    tmp_s += j + ' '
-                tmp_s += '\n'
-            self.output_text.setPlainText(tmp_s)
-            
+            if self.mode == 0:
+                tmp = cur.execute(self.input_text.toPlainText())
+                tmp_s = ""
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)
+            if self.mode == 1:
+                tmp = cur.execute('SELECT * FROM job,company WHERE job.cid=company.cid')
+                tmp_s = "Job id, Job Name, Salary, Company id, company id, capital, company name \n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)
+            if self.mode == 2:
+                tmp = cur.execute('SELECT * FROM employee')
+                tmp_s = "Name, Age, Gender\n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)
+            if self.mode == 3:
+                txt = self.input_text.toPlainText()
+                txt = txt.split(' ')
+                txt_id = txt[0]
+                txt_age = txt[1]
+                txt_gen = txt[2]
+                tmp = cur.execute('UPDATE employee SET Age=? WHERE Eid=?', (txt_age, txt_id))
+                tmp = cur.execute('UPDATE employee SET Gender=? WHERE Eid=?', (txt_gen, txt_id))
+                tmp = cur.execute('SELECT * FROM employee')
+                tmp_s = "Name, Age, Gender\n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)
+            if self.mode == 4:
+                txt = self.input_text.toPlainText()
+                txt = txt.split(' ')
+                txt_sal = txt[0]
+                tmp = cur.execute('SELECT CName, AVG(job.Salary), COUNT(job.jid) FROM job,company WHERE company.cid=job.cid GROUP BY job.cid HAVING AVG(Salary)>(?)', [int(txt_sal)])
+                tmp_s = "company name  , average salary, count company\n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)  
+            if self.mode == 5:
+                txt = self.input_text.toPlainText()
+                txt = txt.split(' ')
+                txt_cname = txt[0]
+                tmp_s = "Max Salary\n"
+                tmp = cur.execute('SELECT Max(Salary) FROM job,company WHERE job.cid=company.cid AND company.CName=(?)', [txt_cname])
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                tmp = cur.execute('SELECT Min(Salary) FROM job,company WHERE job.cid=company.cid AND company.CName=(?)', [txt_cname])
+                tmp_s += "Min Salary\n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                tmp = cur.execute('SELECT Sum(Salary) FROM job,company WHERE job.cid=company.cid AND company.CName=(?)', [txt_cname])
+                tmp_s += "Sum Salary\n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                tmp = cur.execute('SELECT AVG(Salary) FROM job,company WHERE job.cid=company.cid AND company.CName=(?)', [txt_cname])
+                tmp_s += "AVG Salary\n"
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)  
+            if self.mode == 6:
+                txt = self.input_text.toPlainText()
+                txt = txt.split(' ')
+                tmp = ""
+                for i in txt:
+                    tmp += '\'' + i + '\','
+                tmp_s = "Job id, Job Name, Salary, company id\n"
+                tmp = tmp[:-1]
+                query = "SELECT * FROM job WHERE Job_Name IN ({})".format(tmp)
+                tmp = cur.execute(query)
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)  
+            if self.mode == 7:
+                txt = self.input_text.toPlainText()
+                txt = txt.split(' ')
+                tmp = ""
+                for i in txt:
+                    tmp += '\'' + i + '\','
+                tmp_s = "Search\n"
+                tmp = tmp[:-1]
+                query = "SELECT * FROM job WHERE Job_Name NOT IN ({})".format(tmp)
+                tmp = cur.execute(query)
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)  
+            if self.mode == 8:
+                tmp_s = ""
+                query = "SELECT CName FROM company WHERE EXISTS (SELECT * FROM job WHERE job.cid=company.cid)"
+                tmp = cur.execute(query)
+                for i in tmp:
+                    for j in i:
+                        tmp_s += str(j) + ' '
+                    tmp_s += '\n'
+                self.output_text.setPlainText(tmp_s)
+
+
+
         except Exception as e:
             print(e)
 
@@ -65,11 +186,11 @@ class ExampleApp(QtWidgets.QMainWindow, Ui.Ui_MainWindow):
         '''
         job_data = pd.read_csv('data/job.csv')
         for i in range(len(job_data)):
-            cur.execute("INSERT INTO job VALUES (?, ?, ?, ?)", job_data.iloc[i])
+            cur.execute("INSERT INTO job VALUES (?, ?, ?, ?)", (job_data.iloc[i][0], job_data.iloc[i][1], int(job_data.iloc[i][2]), job_data.iloc[i][3]))
 
         employee_data = pd.read_csv('data/employee.csv')
         for i in range(len(employee_data)):
-            cur.execute("INSERT INTO employee VALUES (?, ?, ?)", employee_data.iloc[i])
+            cur.execute("INSERT INTO employee VALUES (?, ?, ?)", (employee_data.iloc[i][0], int(employee_data.iloc[i][1]), employee_data.iloc[i][2]))
     
         hr_data = pd.read_csv('data/hr.csv')
         for i in range(len(hr_data)):
@@ -88,12 +209,14 @@ class ExampleApp(QtWidgets.QMainWindow, Ui.Ui_MainWindow):
         '''
         Delete all the Data from data folder
         '''
-        print("deleting all data")
+        print("deleting all data")      
         cur.execute('DELETE FROM job')
         cur.execute('DELETE FROM company')
         cur.execute('DELETE FROM employee')
         cur.execute('DELETE FROM hr')
         cur.execute('DELETE FROM resume')
+
+   
 
     def dump_data(self):
         '''
