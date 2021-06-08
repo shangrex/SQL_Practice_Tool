@@ -27,7 +27,13 @@ pyuic5 Ui.ui -o Ui.py
 ## ER schema
 ![](https://i.imgur.com/Y81JZSN.png)
 [link](https://drive.google.com/file/d/10KKWdZmozOKzuvoHM6rYbei583mMSkrI/view?usp=sharing)
+Employee submit resume
+Company offer jobs
+HR match up the job and resume 
 
+## System
+![](https://i.imgur.com/UEW2YGY.png)
+Can click the combol box to choose the function and Search
 
 ## Function
 * create table(default)
@@ -64,6 +70,7 @@ pyuic5 Ui.ui -o Ui.py
 * possible_company
 	* Show the company's name which have provided job
 	> EXISTS
+
 
 ## SQL Example
 
